@@ -1,0 +1,48 @@
+---
+- name: Configure VLANs on Cisco Switch
+  hosts: cisco_switch
+  gather_facts: yes
+  connection: ansible.netcommon.network_cli
+
+  vars:
+    ansible_network_os: cisco.ios.ios
+    vlans:
+      - id: 10
+        name: Sales
+      - id: 20
+        name: Developers
+      - id: 30
+        name: HR
+
+  tasks:
+    - name: Create VLANs
+      cisco.ios.ios_vlan:
+        vlan_id: "{{ item.id }}"
+        name: "{{ item.name }}"
+        state: present
+      loop: "{{ vlans }}"
+
+    - name: Assign VLAN 10 to interface GigabitEthernet0/1
+      cisco.ios.ios_config:
+        lines:
+          - "switchport mode access"
+          - "switchport access vlan 10"
+        parents: "interface GigabitEthernet0/1"
+
+    - name: Assign VLAN 20 to interface GigabitEthernet0/2
+      cisco.ios.ios_config:
+        lines:
+          - "switchport mode access"
+          - "switchport access vlan 20"
+        parents: "interface GigabitEthernet0/2"
+
+    - name: Assign VLAN 30 to interface GigabitEthernet0/3
+      cisco.ios.ios_config:
+        lines:
+          - "switchport mode access"
+          - "switchport access vlan 30"
+        parents: "interface GigabitEthernet0/3"
+
+    - name: Save configuration
+      cisco.ios.ios_config:
+        save_when: always
