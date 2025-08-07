@@ -30,8 +30,6 @@ step3.Run ansible-playbook site.yml -i inventory.yml
 step4.Validate with show vlan and show access-lists on routers.
 
 
-todo:
-
 ## Testing & Validation
 - Configuration playbooks were tested by connecting to devices via SSH/Telnet from the control node.
 - VLANs were verified using show vlan and interface status.
