@@ -12,16 +12,23 @@ This project automates the configuration of Cisco network devices using Python, 
 - Improve network reproducibility, scalability, and security using automation best practices.
 
 ## Technologies Used
-- Ansible
-- Python
+- Ansible version 2.9+
+- Python 3.x 
 - Cisco Modeling Labs (CML)
-- GNS3 (second exploration)
 - Linux
 - Cisco IOS/ASA devices
 - Markdown / PowerPoint for Documentation
 
+
 ## System Topology
-The project was tested using a simulated lab environment with the following device IPs and credentials:
+step1.Clone repo from GitHub.
+
+step2.Navigate to the control node directory.
+
+step3.Run ansible-playbook site.yml -i inventory.yml
+
+step4.Validate with show vlan and show access-lists on routers.
+
 
 todo:
 
