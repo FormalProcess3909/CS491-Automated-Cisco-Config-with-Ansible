@@ -1,53 +1,52 @@
 ---
-# Network Interface Status Reporter
-# Purpose: Collects interface status from Cisco devices...
-# and generates CSV/Markdown reports
-- name: Network Interface Status Reporter
-  hosts: cisco_devices #our target
-  gather_facts: no
-  vars:
-    report_dir: "./reports/interfaces" #location where reports will be stored
+# Playbook: Network Interface Status Report
+# Descrip: Collects interface status from Cisco devices and generates reports in CSV and Markdown formats
 
-    timestamp: "report_%(Y-%m-%d_%H-%M)s"
-    
-  tasks: #generate timestamp
-    - name: Generate timestamp
+- name: Collect interface status and generate reports
+  hosts: cisco_devices
+  gather_facts: no
+
+  vars:
+    report_dir: "./reports/interfaces"
+
+  tasks:
+
+    - name: Generate current timestamp for report filenames
       ansible.builtin.set_fact:
         timestamp: "{{ lookup('pipe', 'date +%Y-%m-%d_%H-%M') }}"
       delegate_to: localhost
       run_once: true
 
-    - name: Ensure report directory exists
+    - name: Make sure the report directory exists
       ansible.builtin.file:
         path: "{{ report_dir }}"
-        state: directory #makes directory
-        mode: '0755' #set permission
+        state: directory
+        mode: '0755'
       delegate_to: localhost
-          #collect data from devices
-    - name: Collect interface data
+
+    - name: Retrieve interface status from Cisco devices
       cisco.ios.ios_command:
-        commands: 
-          - show ip interface brief # will gather basic status
-          - show interfaces description 
+        commands:
+          - show ip interface brief
+          - show interfaces description
       register: interface_data
-        #generate csv
-    - name: Create CSV report
+
+    - name: Generate CSV report from template
       ansible.builtin.template:
-        src: ../templates/interface_report.csv.j2 #template needed to work
+        src: ../templates/interface_report.csv.j2
         dest: "{{ report_dir }}/{{ inventory_hostname }}_interfaces_{{ timestamp }}.csv"
       delegate_to: localhost
-          #generate markdown
-    - name: Create Markdown report
+
+    - name: Generate Markdown report from template
       ansible.builtin.template:
-        src: ../templates/interface_report.md.j2 #template needed to work
+        src: ../templates/interface_report.md.j2
         dest: "{{ report_dir }}/{{ inventory_hostname }}_interfaces_{{ timestamp }}.md"
       delegate_to: localhost
       vars:
-        # Pass timestamp explicitly to template
         report_time: "{{ lookup('pipe', 'date') }}"
 
-    - name: Show report paths
+    - name: Display generated report file paths
       ansible.builtin.debug:
-        msg: 
-          - "CSV report: {{ report_dir }}/{{ inventory_hostname }}_interfaces_{{ timestamp }}.csv"
-          - "Markdown report: {{ report_dir }}/{{ inventory_hostname }}_interfaces_{{ timestamp }}.md"
+        msg:
+          - "CSV Report: {{ report_dir }}/{{ inventory_hostname }}_interfaces_{{ timestamp }}.csv"
+          - "Markdown Report: {{ report_dir }}/{{ inventory_hostname }}_interfaces_{{ timestamp }}.md"
