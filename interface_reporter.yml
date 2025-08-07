@@ -1,0 +1,53 @@
+---
+# Network Interface Status Reporter
+# Purpose: Collects interface status from Cisco devices...
+# and generates CSV/Markdown reports
+- name: Network Interface Status Reporter
+  hosts: cisco_devices #our target
+  gather_facts: no
+  vars:
+    report_dir: "./reports/interfaces" #location where reports will be stored
+
+    timestamp: "report_%(Y-%m-%d_%H-%M)s"
+    
+  tasks: #generate timestamp
+    - name: Generate timestamp
+      ansible.builtin.set_fact:
+        timestamp: "{{ lookup('pipe', 'date +%Y-%m-%d_%H-%M') }}"
+      delegate_to: localhost
+      run_once: true
+
+    - name: Ensure report directory exists
+      ansible.builtin.file:
+        path: "{{ report_dir }}"
+        state: directory #makes directory
+        mode: '0755' #set permission
+      delegate_to: localhost
+          #collect data from devices
+    - name: Collect interface data
+      cisco.ios.ios_command:
+        commands: 
+          - show ip interface brief # will gather basic status
+          - show interfaces description 
+      register: interface_data
+        #generate csv
+    - name: Create CSV report
+      ansible.builtin.template:
+        src: ../templates/interface_report.csv.j2 #template needed to work
+        dest: "{{ report_dir }}/{{ inventory_hostname }}_interfaces_{{ timestamp }}.csv"
+      delegate_to: localhost
+          #generate markdown
+    - name: Create Markdown report
+      ansible.builtin.template:
+        src: ../templates/interface_report.md.j2 #template needed to work
+        dest: "{{ report_dir }}/{{ inventory_hostname }}_interfaces_{{ timestamp }}.md"
+      delegate_to: localhost
+      vars:
+        # Pass timestamp explicitly to template
+        report_time: "{{ lookup('pipe', 'date') }}"
+
+    - name: Show report paths
+      ansible.builtin.debug:
+        msg: 
+          - "CSV report: {{ report_dir }}/{{ inventory_hostname }}_interfaces_{{ timestamp }}.csv"
+          - "Markdown report: {{ report_dir }}/{{ inventory_hostname }}_interfaces_{{ timestamp }}.md"
